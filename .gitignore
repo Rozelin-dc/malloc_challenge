@@ -2,3 +2,5 @@
 *.swp
 *.dSYM
 out.txt
+
+.vscode
