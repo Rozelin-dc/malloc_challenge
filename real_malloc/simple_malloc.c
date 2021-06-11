@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <sys/time.h>
+#include <windows.h>
 
 void *mmap_from_system(size_t size);
 void munmap_to_system(void *ptr, size_t size);
