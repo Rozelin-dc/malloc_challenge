@@ -202,7 +202,7 @@ void run_challenge(const char *trace_file_name, size_t min_size,
         allocated += size;
         void *ptr = malloc_func(size);
         if (trace_fp) {
-          fprintf(trace_fp, "a %lld %ld\n", (uint64_t)ptr, size);
+          fprintf(trace_fp, "a %ld %ld\n", (uint64_t)ptr, size);
         }
         memset(ptr, tag, size);
         object_t object = {ptr, size, tag};
@@ -234,7 +234,7 @@ void run_challenge(const char *trace_file_name, size_t min_size,
         }
         free_func(object.ptr);
         if (trace_fp) {
-          fprintf(trace_fp, "f %lld %ld\n", (uint64_t)object.ptr, object.size);
+          fprintf(trace_fp, "f %ld %ld\n", (uint64_t)object.ptr, object.size);
         }
       }
 
