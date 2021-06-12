@@ -62,7 +62,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include <windows.h>
+#include <sys/mman.h>
 
 void *mmap_from_system(size_t size);
 void munmap_to_system(void *ptr, size_t size);
