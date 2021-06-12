@@ -7,13 +7,13 @@ malloc_challenge.bin : ${SRCS} Makefile
 malloc_challenge_with_trace.bin : ${SRCS} Makefile
 	$(CC) -DENABLE_MALLOC_TRACE -o $@ $(SRCS) $(CFLAGS)
 
-run : malloc_challenge.bin
+run :
 	./malloc_challenge.bin
 
 run_trace : malloc_challenge_with_trace.bin
 	./malloc_challenge_with_trace.bin
 
-run_valgrind : malloc_challenge_with_trace.bin
+run_valgrind :
 	valgrind ./malloc_challenge_with_trace.bin
 
 clean :
@@ -24,4 +24,7 @@ commit :
 	clang-format -i *.c
 	git add .
 	git commit
+
+build :
+	gcc -g -Wall -O3 -o malloc_challenge.bin main.c malloc.c simple_malloc.c -lm
 
