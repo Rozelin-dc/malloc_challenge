@@ -64,8 +64,8 @@
 #include <sys/time.h>
 #include <windows.h>
 
-void *mmap_from_system(size_t size);
-void munmap_to_system(void *ptr, size_t size);
+void *mmap_from_system(size_t size, HANDLE* map_handle);
+void munmap_to_system(void *ptr, size_t size, HANDLE* map_handle);
 
 // 1) For an allocated object:
 //   *  |size| indicates the size of the object. |size| does not include
@@ -78,6 +78,7 @@ void munmap_to_system(void *ptr, size_t size);
 //      free list). |next| points to the next free slot.
 typedef struct simple_metadata_t {
   size_t size;
+  HANDLE map_handle;
   struct simple_metadata_t *next;
 } simple_metadata_t;
 
@@ -141,7 +142,9 @@ void *my_malloc(size_t size) {
     //     <---------------------->
     //            buffer_size
     size_t buffer_size = 4096;
-    simple_metadata_t *metadata = (simple_metadata_t *)mmap_from_system(buffer_size);
+    HANDLE map_handle;
+    simple_metadata_t *metadata = (simple_metadata_t *)mmap_from_system(buffer_size, &map_handle);
+    metadata->map_handle = map_handle;
     metadata->size = buffer_size - sizeof(simple_metadata_t);
     metadata->next = NULL;
     // Add the memory region to the free list.
@@ -193,7 +196,7 @@ void my_free(void *ptr) {
   // Add the free slot to the free list.
   add_to_free_list(metadata);
 
-  munmap_to_system(ptr, 4096);
+  munmap_to_system(ptr, 4096, &(metadata->map_handle));
 }
 
 void my_finalize() {

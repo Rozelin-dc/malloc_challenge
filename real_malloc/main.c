@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <windows.h>
 #include <sys/time.h>
+#include "mmap-for-windows.h"
 
 //
 // [Simple malloc]
@@ -331,23 +331,21 @@ void run_challenges() {
 
 // Allocate a memory region from the system. |size| needs to be a multiple of
 // 4096 bytes.
-void *mmap_from_system(size_t size) {
+void *mmap_from_system(size_t size, HANDLE* map_handle) {
   assert(size % 4096 == 0);
   stats.mmap_size += size;
-  void *ptr = mmap(NULL, size, PROT_READ | PROT_WRITE,
-                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  void *ptr = mmap_for_windows("aa", &map_handle, size);
   assert(ptr);
   return ptr;
 }
 
 // Free a memory region [ptr, ptr + size) to the system. |ptr| and |size| needs
 // to be a multiple of 4096 bytes.
-void munmap_to_system(void *ptr, size_t size) {
+void munmap_to_system(void *ptr, size_t size, HANDLE* map_handle) {
   assert(size % 4096 == 0);
   assert((uintptr_t)(ptr) % 4096 == 0);
   stats.munmap_size += size;
-  int ret = munmap(ptr, size);
-  assert(ret != -1);
+  munmap_for_windows(ptr, &map_handle);
 }
 
 int main(int argc, char **argv) {
