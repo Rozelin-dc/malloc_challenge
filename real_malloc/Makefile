@@ -7,8 +7,8 @@ malloc_challenge.bin : ${SRCS} Makefile
 malloc_challenge_with_trace.bin : ${SRCS} Makefile
 	$(CC) $(CFLAGS) -DENABLE_MALLOC_TRACE -o $@ $(SRCS)
 
-run : malloc_challenge.bin
-	./malloc_challenge.bin
+run : 
+	malloc_challenge.bin
 
 run_trace : malloc_challenge_with_trace.bin
 	./malloc_challenge_with_trace.bin
@@ -22,5 +22,5 @@ commit :
 	git commit
 
 build :
-	gcc -Wall -O3 -lm -o malloc_challenge.bin main.c malloc.c simple_malloc.c mmap-for-windows.c
+	gcc -Wall -O4 -o malloc_challenge.bin main.c malloc.c simple_malloc.c mmap-for-windows.c
 

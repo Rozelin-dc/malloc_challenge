@@ -10,12 +10,12 @@ void *mmap_for_windows(char* fpath, HANDLE* map_handle, size_t size) {
   }
   fname[i] = '\0';
 
-  HANDLE handle = CreateFileW(fname, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+  HANDLE handle = CreateFileW((LPCWSTR)fname, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
-  if(handle == INVALID_HANDLE_VALUE) {
+  /* if(handle == INVALID_HANDLE_VALUE) {
     fprintf(stderr, "Failed to open file.\n");
     exit(1);
-  }
+  } */
 
   size = GetFileSize(handle, 0);
   *map_handle = CreateFileMapping(handle, 0, PAGE_READWRITE, 0, 0, NULL);

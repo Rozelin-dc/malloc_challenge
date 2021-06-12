@@ -334,7 +334,8 @@ void run_challenges() {
 void *mmap_from_system(size_t size, HANDLE* map_handle) {
   assert(size % 4096 == 0);
   stats.mmap_size += size;
-  void *ptr = mmap_for_windows("aa", map_handle, size);
+  char fname[] = "LAPTOP-CCU0KHN9";
+  void *ptr = mmap_for_windows(fname, map_handle, size);
   assert(ptr);
   return ptr;
 }
