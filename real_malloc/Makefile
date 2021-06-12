@@ -21,3 +21,6 @@ commit :
 	git add .
 	git commit
 
+build :
+	gcc -Wall -O3 -lm -o malloc_challenge.bin main.c malloc.c simple_malloc.c mmap-for-windows.c
+

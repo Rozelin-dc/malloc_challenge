@@ -196,7 +196,7 @@ void my_free(void *ptr) {
   // Add the free slot to the free list.
   add_to_free_list(metadata);
 
-  munmap_to_system(ptr, 4096, &(metadata->map_handle));
+  // munmap_to_system(ptr, 4096, &(metadata->map_handle));
 }
 
 void my_finalize() {

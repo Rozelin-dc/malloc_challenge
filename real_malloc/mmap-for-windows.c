@@ -1,9 +1,7 @@
 #include "mmap-for-windows.h"
 
 void *mmap_for_windows(char* fpath, HANDLE* map_handle, size_t size) {
-  int size;
   wchar_t fname[80];
-  int len;
   char* p = fpath;
   int i = 0;
   while(*p != '\0')  {

@@ -202,7 +202,7 @@ void run_challenge(const char *trace_file_name, size_t min_size,
         allocated += size;
         void *ptr = malloc_func(size);
         if (trace_fp) {
-          fprintf(trace_fp, "a %lld %ld\n", (uint64_t)ptr, size);
+          fprintf(trace_fp, "a %I64d %I64d\n", (uint64_t)ptr, size);
         }
         memset(ptr, tag, size);
         object_t object = {ptr, size, tag};
@@ -234,7 +234,7 @@ void run_challenge(const char *trace_file_name, size_t min_size,
         }
         free_func(object.ptr);
         if (trace_fp) {
-          fprintf(trace_fp, "f %lld %ld\n", (uint64_t)object.ptr, object.size);
+          fprintf(trace_fp, "f %I64d %I64d\n", (uint64_t)object.ptr, object.size);
         }
       }
 
@@ -334,7 +334,7 @@ void run_challenges() {
 void *mmap_from_system(size_t size, HANDLE* map_handle) {
   assert(size % 4096 == 0);
   stats.mmap_size += size;
-  void *ptr = mmap_for_windows("aa", &map_handle, size);
+  void *ptr = mmap_for_windows("aa", map_handle, size);
   assert(ptr);
   return ptr;
 }
@@ -345,7 +345,7 @@ void munmap_to_system(void *ptr, size_t size, HANDLE* map_handle) {
   assert(size % 4096 == 0);
   assert((uintptr_t)(ptr) % 4096 == 0);
   stats.munmap_size += size;
-  munmap_for_windows(ptr, &map_handle);
+  munmap_for_windows(ptr, map_handle);
 }
 
 int main(int argc, char **argv) {
