@@ -36,7 +36,7 @@ void test();
 typedef struct object_t {
   void *ptr;
   size_t size;
-  char tag;  // A tag to check the object is not broken.
+  char tag; // A tag to check the object is not broken.
 } object_t;
 
 typedef struct vector_t {
@@ -163,10 +163,11 @@ void run_challenge(const char *trace_file_name, size_t min_size,
       exit(EXIT_FAILURE);
     }
   }
-  const int epochs_per_cycle = 20;
-  const int objects_per_epoch_small = 50;
-  const int objects_per_epoch_large = 250;
-  printf("!!! WARNING - MALLOC_TRACE is enabled. The result will be different compare to normal builds\n");
+  const int epochs_per_cycle = 10;
+  const int objects_per_epoch_small = 25;
+  const int objects_per_epoch_large = 50;
+  printf("!!! WARNING - MALLOC_TRACE is enabled. The result will be different "
+         "compare to normal builds\n");
 #else
   const int epochs_per_cycle = 100;
   const int objects_per_epoch_small = 100;
@@ -202,7 +203,7 @@ void run_challenge(const char *trace_file_name, size_t min_size,
         allocated += size;
         void *ptr = malloc_func(size);
         if (trace_fp) {
-          fprintf(trace_fp, "a %lld %ld\n", (uint64_t)ptr, size);
+          fprintf(trace_fp, "a %llu %ld\n", (unsigned long long)ptr, size);
         }
         memset(ptr, tag, size);
         object_t object = {ptr, size, tag};
@@ -234,7 +235,8 @@ void run_challenge(const char *trace_file_name, size_t min_size,
         }
         free_func(object.ptr);
         if (trace_fp) {
-          fprintf(trace_fp, "f %lld %ld\n", (uint64_t)object.ptr, object.size);
+          fprintf(trace_fp, "f %llu %ld\n", (unsigned long long)object.ptr,
+                  object.size);
         }
       }
 
@@ -258,7 +260,10 @@ void run_challenge(const char *trace_file_name, size_t min_size,
     vector_destroy(objects[i]);
   }
   finalize_func();
-  fclose(trace_fp);
+  if (trace_fp) {
+    fclose(trace_fp);
+    trace_fp = NULL;
+  }
 }
 
 // Print stats
@@ -337,6 +342,9 @@ void *mmap_from_system(size_t size) {
   void *ptr = mmap(NULL, size, PROT_READ | PROT_WRITE,
                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   assert(ptr);
+  if (trace_fp) {
+    fprintf(trace_fp, "m %llu %ld\n", (unsigned long long)ptr, size);
+  }
   return ptr;
 }
 
@@ -347,11 +355,14 @@ void munmap_to_system(void *ptr, size_t size) {
   assert((uintptr_t)(ptr) % 4096 == 0);
   stats.munmap_size += size;
   int ret = munmap(ptr, size);
+  if (trace_fp) {
+    fprintf(trace_fp, "u %llu %ld\n", (unsigned long long)ptr, size);
+  }
   assert(ret != -1);
 }
 
 int main(int argc, char **argv) {
-  srand(12);  // Set the rand seed to make the challenges non-deterministic.
+  srand(12); // Set the rand seed to make the challenges non-deterministic.
   test();
   run_challenges();
   return 0;
