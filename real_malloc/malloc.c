@@ -113,14 +113,14 @@ void my_initialize() {
 void add_to_free_list(metadata_t *metadata) {
   assert(!metadata->next);
 
-  if (metadata + (int)(metadata->size) + 1 == heap.free_head) {
+  if ((metadata_t *)((char *)metadata + metadata->size) == heap.free_head) {
     metadata->next = heap.free_head->next;
     metadata->size = metadata->size + heap.free_head->size - sizeof(metadata_t);
     heap.free_head = metadata;
     return;
   }
 
-  if (heap.free_head + (int)(heap.free_head->size) + 1 == metadata) {
+  if ((metadata_t *)((char *)heap.free_head + heap.free_head->size) == metadata) {
     heap.free_head->size = heap.free_head->size + metadata->size - sizeof(metadata_t);
     return;
   }
@@ -131,7 +131,7 @@ void add_to_free_list(metadata_t *metadata) {
 
 // Remove a free slot from the free list.
 void remove_from_free_list(metadata_t *metadata, metadata_t *prev) {
-  if (prev) {
+  if (prev != NULL) {
     prev->next = metadata->next;
   } else {
     heap.free_head = metadata->next;
