@@ -63,6 +63,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BUFFER_SIZE 4096
+
 void *mmap_from_system(size_t size);
 void munmap_to_system(void *ptr, size_t size);
 
@@ -97,9 +99,32 @@ typedef struct heap_t {
 
 heap_t heap;
 
+// my_initialize() is called only once at the beginning of each challenge.
+void my_initialize() {
+  // Implement here!
+  heap.free_head = (metadata_t *)mmap_from_system(BUFFER_SIZE);
+  heap.free_head->size = BUFFER_SIZE - sizeof(metadata_t);
+  heap.free_head->next = NULL;
+  heap.dummy.size = 0;
+  heap.dummy.next = NULL;
+}
+
 // Add a free slot to the beginning of the free list.
 void add_to_free_list(metadata_t *metadata) {
   assert(!metadata->next);
+
+  if (metadata + (int)(metadata->size) + 1 == heap.free_head) {
+    metadata->next = heap.free_head->next;
+    metadata->size = metadata->size + heap.free_head->size - sizeof(metadata_t);
+    heap.free_head = metadata;
+    return;
+  }
+
+  if (heap.free_head + (int)(heap.free_head->size) + 1 == metadata) {
+    heap.free_head->size = heap.free_head->size + metadata->size - sizeof(metadata_t);
+    return;
+  }
+
   metadata->next = heap.free_head;
   heap.free_head = metadata;
 }
@@ -114,14 +139,6 @@ void remove_from_free_list(metadata_t *metadata, metadata_t *prev) {
   metadata->next = NULL;
 }
 
-// my_initialize() is called only once at the beginning of each challenge.
-void my_initialize() {
-  // Implement here!
-  heap.free_head = &heap.dummy;
-  heap.dummy.size = 0;
-  heap.dummy.next = NULL;
-}
-
 // my_malloc() is called every time an object is allocated. |size| is guaranteed
 // to be a multiple of 8 bytes and meets 8 <= |size| <= 4000. You are not
 // allowed to use any library functions other than mmap_from_system /
@@ -131,9 +148,11 @@ void *my_malloc(size_t size) {
   metadata_t *metadata = NULL;
   metadata_t *prev = NULL;
   metadata_t *now = heap.free_head;
+  metadata_t *next = now->next;
   // Best-fit: Find the best free slot the object fits.
+  // if (now->size >= size) metadata = now;
   while (now->next != NULL) {
-    metadata_t *next = now->next;
+    next = now->next;
     if ((metadata == NULL || metadata->size > next->size) && next->size >= size) {
       metadata = next;
       prev = now;
@@ -150,9 +169,8 @@ void *my_malloc(size_t size) {
     //     metadata
     //     <---------------------->
     //            buffer_size
-    size_t buffer_size = 4096;
-    metadata = (metadata_t *)mmap_from_system(buffer_size);
-    metadata->size = buffer_size - sizeof(metadata_t);
+    metadata = (metadata_t *)mmap_from_system(BUFFER_SIZE);
+    metadata->size = BUFFER_SIZE - sizeof(metadata_t);
     metadata->next = NULL;
     // Add the memory region to the free list.
     add_to_free_list(metadata);
