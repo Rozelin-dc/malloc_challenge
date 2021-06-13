@@ -128,19 +128,20 @@ void my_initialize() {
 // munmap_to_system.
 void *my_malloc(size_t size) {
   // Implement here!
-  metadata_t *metadata = heap.free_head;
+  metadata_t *metadata = NULL;
   metadata_t *prev = NULL;
+  metadata_t *now = heap.free_head;
   // Best-fit: Find the best free slot the object fits.
-  while (metadata->next != NULL) {
-    if (prev == NULL) {
-      prev = metadata;
-    } else {
-      if (prev->size > metadata->size && metadata->size > size) prev = metadata;
+  while (now->next != NULL) {
+    metadata_t *next = now->next;
+    if ((metadata == NULL || metadata->size > next->size) && next->size >= size) {
+      metadata = next;
+      prev = now;
     }
-    metadata = metadata->next;
+    now = next;
   }
 
-  if (!metadata) {
+  if (metadata == NULL) {
     // There was no free slot available. We need to request a new memory region
     // from the system by calling mmap_from_system().
     //
@@ -150,13 +151,12 @@ void *my_malloc(size_t size) {
     //     <---------------------->
     //            buffer_size
     size_t buffer_size = 4096;
-    metadata_t *metadata =
-        (metadata_t *)mmap_from_system(buffer_size);
+    metadata = (metadata_t *)mmap_from_system(buffer_size);
     metadata->size = buffer_size - sizeof(metadata_t);
     metadata->next = NULL;
     // Add the memory region to the free list.
     add_to_free_list(metadata);
-    // Now, try simple_malloc() again. This should succeed.
+    // Now, try my_malloc() again. This should succeed.
     return my_malloc(size);
   }
 
