@@ -145,20 +145,28 @@ void remove_from_free_list(metadata_t *metadata, metadata_t *prev) {
 // munmap_to_system.
 void *my_malloc(size_t size) {
   // Implement here!
-  metadata_t *metadata = NULL;
+  metadata_t *metadata = heap.free_head;
   metadata_t *prev = NULL;
-  metadata_t *now = heap.free_head;
-  metadata_t *next = now->next;
+  // metadata_t *now = heap.free_head;
+  // metadata_t *next = now->next;
+
   // Best-fit: Find the best free slot the object fits.
   // if (now->size >= size) metadata = now;
-  while (now->next != NULL) {
+  /* while (now->next != NULL) {
     next = now->next;
     if ((metadata == NULL || metadata->size > next->size) && next->size >= size) {
       metadata = next;
       prev = now;
     }
     now = next;
+  } */
+
+  // First-fit: Find the first free slot the object fits.
+  while (metadata != NULL && metadata->size < size) {
+    prev = metadata;
+    metadata = metadata->next;
   }
+
 
   if (metadata == NULL) {
     // There was no free slot available. We need to request a new memory region
