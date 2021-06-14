@@ -113,17 +113,17 @@ void my_initialize() {
 void add_to_free_list(metadata_t *metadata) {
   assert(!metadata->next);
 
-  if ((metadata_t *)((char *)metadata + metadata->size) == heap.free_head) {
+  /* if ((metadata_t *)((char *)metadata + metadata->size + 1) == heap.free_head) {
     metadata->next = heap.free_head->next;
     metadata->size = metadata->size + heap.free_head->size - sizeof(metadata_t);
     heap.free_head = metadata;
     return;
   }
 
-  if ((metadata_t *)((char *)heap.free_head + heap.free_head->size) == metadata) {
+  if ((metadata_t *)((char *)heap.free_head + heap.free_head->size + 1) == metadata) {
     heap.free_head->size = heap.free_head->size + metadata->size - sizeof(metadata_t);
     return;
-  }
+  } */
 
   metadata->next = heap.free_head;
   heap.free_head = metadata;
@@ -145,9 +145,9 @@ void remove_from_free_list(metadata_t *metadata, metadata_t *prev) {
 // munmap_to_system.
 void *my_malloc(size_t size) {
   // Implement here!
-  metadata_t *metadata = heap.free_head;
+  metadata_t *metadata = NULL;
   metadata_t *prev = NULL;
-  // metadata_t *now = heap.free_head;
+  metadata_t *now = heap.free_head;
   // metadata_t *next = now->next;
 
   // Best-fit: Find the best free slot the object fits.
@@ -162,10 +162,24 @@ void *my_malloc(size_t size) {
   } */
 
   // First-fit: Find the first free slot the object fits.
-  while (metadata != NULL && metadata->size < size) {
-    prev = metadata;
-    metadata = metadata->next;
+  while (now != NULL) {
+    if (now->size >= size) {
+      metadata = now;
+      break;
+    }
+    prev = now;
+    now = now->next;
   }
+
+  // Worst-fit: Find the worst free slot the object fits.
+  /* while (now->next != NULL) {
+    next = now->next;
+    if ((metadata == NULL || metadata->size < next->size) && next->size >= size) {
+      metadata = next;
+      prev = now;
+    }
+    now = next;
+  } */
 
 
   if (metadata == NULL) {
