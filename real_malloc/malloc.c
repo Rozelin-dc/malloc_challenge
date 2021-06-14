@@ -110,7 +110,7 @@ void my_initialize() {
 }
 
 // Concatenate free area.
-void concatenate_free_area() {
+/* void concatenate_free_area() {
   metadata_t *metadata = heap.free_head;
   metadata_t *metadata_prev = NULL;
   metadata_t *comparison_prev = metadata;
@@ -136,7 +136,7 @@ void concatenate_free_area() {
     metadata = metadata->next;
   }
   return;
-}
+} */
 
 // Add a free slot to the beginning of the free list.
 void add_to_free_list(metadata_t *metadata) {
@@ -154,9 +154,30 @@ void add_to_free_list(metadata_t *metadata) {
     return;
   } */
 
+  
+  metadata_t *comparison_prev = NULL;
+  metadata_t *comparison = heap.free_head;
+
+  while (comparison != NULL) {
+    if ((metadata_t *)((char *)metadata + metadata->size + 1) == comparison) {
+      if (comparison_prev != NULL) comparison_prev->next = metadata;
+      metadata->size = metadata->size + comparison->size - sizeof(metadata_t);
+      metadata->next = comparison->next;
+      return;
+    }
+
+    if ((metadata_t *)((char *)comparison + comparison->size + 1) == metadata) {
+      comparison->size = comparison->size + metadata->size - sizeof(metadata_t);
+      return;
+    }
+
+    comparison_prev = comparison;
+    comparison = comparison->next;
+  }
+
   metadata->next = heap.free_head;
   heap.free_head = metadata;
-  concatenate_free_area();
+  // concatenate_free_area();
 }
 
 // Remove a free slot from the free list.

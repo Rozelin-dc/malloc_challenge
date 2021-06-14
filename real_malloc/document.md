@@ -85,6 +85,29 @@ Utilization: 15% => 6%
 
 #### First-fit
 
+```
+Challenge 1: simple malloc => my malloc
+Time: 8 ms => 1191 ms
+Utilization: 70% => 70%
+==================================
+Challenge 2: simple malloc => my malloc
+Time: 7 ms => 583 ms
+Utilization: 40% => 40%
+==================================
+Challenge 3: simple malloc => my malloc
+Time: 104 ms => 26995 ms
+Utilization: 7% => 7%
+==================================
+Challenge 4: simple malloc => my malloc
+Time: 19410 ms => 437473 ms
+Utilization: 16% => 15%
+==================================
+Challenge 5: simple malloc => my malloc
+Time: 14230 ms => 406661 ms
+Utilization: 15% => 14%
+==================================
+```
+
 ## 考察
 
 Best-fitとWorst-fitは空き領域を全探索するので、First-fitと比べて実行時間が長くなっていると考えられる。また、Best-fitだと、空き領域の結合を行わないと細切れの空き領域が大量に発生してしまうので、メモリ使用量の観点からも効率が悪いと思われる。
