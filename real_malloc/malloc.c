@@ -109,6 +109,35 @@ void my_initialize() {
   heap.dummy.next = NULL;
 }
 
+// Concatenate free area.
+void concatenate_free_area() {
+  metadata_t *metadata = heap.free_head;
+  metadata_t *metadata_prev = NULL;
+  metadata_t *comparison_prev = metadata;
+  metadata_t *comparison = metadata->next;
+  while (metadata != NULL) {
+    while (comparison != NULL) {
+      if ((metadata_t *)((char *)metadata + metadata->size + 1) == comparison) {
+        comparison_prev->next = comparison->next;
+        metadata->size = metadata->size + comparison->size - sizeof(metadata_t);
+        return;
+      }
+
+      if ((metadata_t *)((char *)comparison + comparison->size + 1) == metadata) {
+        metadata_prev->next = metadata->next;
+        comparison->size = comparison->size + metadata->size - sizeof(metadata_t);
+        return;
+      }
+
+      comparison_prev = comparison;
+      comparison = comparison->next;
+    }
+    metadata_prev = metadata;
+    metadata = metadata->next;
+  }
+  return;
+}
+
 // Add a free slot to the beginning of the free list.
 void add_to_free_list(metadata_t *metadata) {
   assert(!metadata->next);
@@ -127,6 +156,7 @@ void add_to_free_list(metadata_t *metadata) {
 
   metadata->next = heap.free_head;
   heap.free_head = metadata;
+  concatenate_free_area();
 }
 
 // Remove a free slot from the free list.
@@ -150,6 +180,16 @@ void *my_malloc(size_t size) {
   metadata_t *now = heap.free_head;
   // metadata_t *next = now->next;
 
+  // First-fit: Find the first free slot the object fits.
+  while (now != NULL) {
+    if (now->size >= size) {
+      metadata = now;
+      break;
+    }
+    prev = now;
+    now = now->next;
+  }
+
   // Best-fit: Find the best free slot the object fits.
   // if (now->size >= size) metadata = now;
   /* while (now->next != NULL) {
@@ -160,16 +200,6 @@ void *my_malloc(size_t size) {
     }
     now = next;
   } */
-
-  // First-fit: Find the first free slot the object fits.
-  while (now != NULL) {
-    if (now->size >= size) {
-      metadata = now;
-      break;
-    }
-    prev = now;
-    now = now->next;
-  }
 
   // Worst-fit: Find the worst free slot the object fits.
   /* while (now->next != NULL) {
