@@ -63,8 +63,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BUFFER_SIZE 4096
-
 void *mmap_from_system(size_t size);
 void munmap_to_system(void *ptr, size_t size);
 
@@ -99,11 +97,14 @@ typedef struct heap_t {
 
 heap_t heap;
 
+#define BUFFER_SIZE 4096
+#define METADATA_SIZE sizeof(metadata_t)
+
 // my_initialize() is called only once at the beginning of each challenge.
 void my_initialize() {
   // Implement here!
   heap.free_head = (metadata_t *)mmap_from_system(BUFFER_SIZE);
-  heap.free_head->size = BUFFER_SIZE - sizeof(metadata_t);
+  heap.free_head->size = BUFFER_SIZE - METADATA_SIZE;
   heap.free_head->next = NULL;
   heap.dummy.size = 0;
   heap.dummy.next = NULL;
@@ -113,13 +114,13 @@ void my_initialize() {
 void add_to_free_list(metadata_t *metadata) {
   assert(!metadata->next);
   
+  // 繋げられる空き領域を探して、あったら繋げる
   metadata_t *comparison_prev = NULL;
   metadata_t *comparison = heap.free_head;
-
   while (comparison != NULL) {
-    if ((metadata_t *)((char *)metadata + metadata->size + 1) == comparison) {
+    if ((metadata_t *)((char *)metadata + metadata->size + 2) == comparison) {
       if (comparison_prev != NULL) comparison_prev->next = metadata;
-      metadata->size = metadata->size + comparison->size + sizeof(metadata_t);
+      metadata->size = metadata->size + comparison->size + METADATA_SIZE;
       metadata->next = comparison->next;
 
       if (metadata->size > BUFFER_SIZE) {
@@ -131,8 +132,8 @@ void add_to_free_list(metadata_t *metadata) {
       return;
     }
 
-    if ((metadata_t *)((char *)comparison + comparison->size + 1) == metadata) {
-      comparison->size = comparison->size + metadata->size + sizeof(metadata_t);
+    if ((metadata_t *)((char *)comparison + comparison->size + 2) == metadata) {
+      comparison->size = comparison->size + metadata->size + METADATA_SIZE;
 
       if (comparison->size > BUFFER_SIZE) {
         void *ptr = comparison + 2 + BUFFER_SIZE;
@@ -143,6 +144,7 @@ void add_to_free_list(metadata_t *metadata) {
       return;
     }
 
+    // 繋げられる空き領域が無かったら
     comparison_prev = comparison;
     comparison = comparison->next;
   }
@@ -214,7 +216,7 @@ void *my_malloc(size_t size) {
     //     <---------------------->
     //            buffer_size
     metadata = (metadata_t *)mmap_from_system(BUFFER_SIZE);
-    metadata->size = BUFFER_SIZE - sizeof(metadata_t);
+    metadata->size = BUFFER_SIZE - METADATA_SIZE;
     metadata->next = NULL;
     // Add the memory region to the free list.
     add_to_free_list(metadata);
@@ -233,7 +235,7 @@ void *my_malloc(size_t size) {
   // Remove the free slot from the free list.
   remove_from_free_list(metadata, prev);
 
-  if (remaining_size > sizeof(metadata_t)) {
+  if (remaining_size > METADATA_SIZE) {
     // Create a new metadata for the remaining free slot.
     //
     // ... | metadata | object | metadata | free slot | ...
@@ -242,7 +244,7 @@ void *my_malloc(size_t size) {
     //                 <------><---------------------->
     //                   size       remaining size
     metadata_t *new_metadata = (metadata_t *)((char *)ptr + size);
-    new_metadata->size = remaining_size - sizeof(metadata_t);
+    new_metadata->size = remaining_size - METADATA_SIZE;
     new_metadata->next = NULL;
     // Add the remaining free slot to the free list.
     add_to_free_list(new_metadata);
