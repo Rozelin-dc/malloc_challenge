@@ -118,7 +118,7 @@ void add_to_free_list(metadata_t *metadata) {
   metadata_t *comparison_prev = NULL;
   metadata_t *comparison = heap.free_head;
   while (comparison != NULL) {
-    if ((metadata_t *)((char *)metadata + metadata->size + 2) == comparison) {
+    if ((metadata_t *)((char *)metadata + metadata->size + 1) == comparison) {
       if (comparison_prev != NULL) comparison_prev->next = metadata;
       metadata->size = metadata->size + comparison->size + METADATA_SIZE;
       metadata->next = comparison->next;
@@ -132,7 +132,7 @@ void add_to_free_list(metadata_t *metadata) {
       return;
     }
 
-    if ((metadata_t *)((char *)comparison + comparison->size + 2) == metadata) {
+    if ((metadata_t *)((char *)comparison + comparison->size + 1) == metadata) {
       comparison->size = comparison->size + metadata->size + METADATA_SIZE;
 
       if (comparison->size > BUFFER_SIZE) {
@@ -172,20 +172,19 @@ void *my_malloc(size_t size) {
   metadata_t *metadata = NULL;
   metadata_t *prev = NULL;
   metadata_t *now = heap.free_head;
-  // metadata_t *next = now->next;
+  metadata_t *next = now->next;
 
   // First-fit: Find the first free slot the object fits.
-  while (now != NULL) {
+  /* while (now != NULL) {
     if (now->size >= size) {
       metadata = now;
       break;
     }
     prev = now;
     now = now->next;
-  }
+  } */
 
   // Best-fit: Find the best free slot the object fits.
-  // if (now->size >= size) metadata = now;
   /* while (now->next != NULL) {
     next = now->next;
     if ((metadata == NULL || metadata->size > next->size) && next->size >= size) {
@@ -196,14 +195,14 @@ void *my_malloc(size_t size) {
   } */
 
   // Worst-fit: Find the worst free slot the object fits.
-  /* while (now->next != NULL) {
+  while (now->next != NULL) {
     next = now->next;
     if ((metadata == NULL || metadata->size < next->size) && next->size >= size) {
       metadata = next;
       prev = now;
     }
     now = next;
-  } */
+  }
 
 
   if (metadata == NULL) {

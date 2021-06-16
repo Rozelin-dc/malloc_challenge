@@ -87,29 +87,29 @@ Utilization: 15% => 6%
 
 ```
 Challenge 1: simple malloc => my malloc
-Time: 55 ms => 3738 ms
+Time: 8 ms => 1191 ms
 Utilization: 70% => 70%
 ==================================
 Challenge 2: simple malloc => my malloc
-Time: 22 ms => 1302 ms
+Time: 7 ms => 583 ms
 Utilization: 40% => 40%
 ==================================
 Challenge 3: simple malloc => my malloc
-Time: 392 ms => 180470 ms
+Time: 104 ms => 26995 ms
 Utilization: 7% => 7%
 ==================================
 Challenge 4: simple malloc => my malloc
-Time: 69002 ms => 1940418 ms
+Time: 19410 ms => 437473 ms
 Utilization: 16% => 15%
 ==================================
 Challenge 5: simple malloc => my malloc
-Time: 53462 ms => 1775658 ms
+Time: 14230 ms => 406661 ms
 Utilization: 15% => 14%
 ==================================
 ```
 
 #### Best-fit
-要改善
+
 ```
 Challenge 1: simple malloc => my malloc
 Time: 8 ms => 2695 ms
@@ -134,7 +134,7 @@ Utilization: 15% => 71%
 ```
 
 #### Worst-fit
-要改善
+
 ```
 Challenge 1: simple malloc => my malloc
 Time: 9 ms => 2802 ms
