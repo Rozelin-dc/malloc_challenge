@@ -86,16 +86,7 @@ typedef struct metadata_t {
   struct metadata_t *next;
 } metadata_t;
 
-// The global information of the simple malloc.
-//   *  |free_head| points to the first free slot.
-//   *  |dummy| is a dummy free slot (only used to make the free list
-//      implementation simpler).
-typedef struct heap_t {
-  metadata_t *free_head;
-  metadata_t dummy;
-} heap_t;
-
-heap_t heap;
+metadata_t *heap;
 
 #define BUFFER_SIZE 4096
 #define METADATA_SIZE sizeof(metadata_t)
@@ -103,11 +94,9 @@ heap_t heap;
 // my_initialize() is called only once at the beginning of each challenge.
 void my_initialize() {
   // Implement here!
-  heap.free_head = (metadata_t *)mmap_from_system(BUFFER_SIZE);
-  heap.free_head->size = BUFFER_SIZE - METADATA_SIZE;
-  heap.free_head->next = NULL;
-  heap.dummy.size = 0;
-  heap.dummy.next = NULL;
+  heap = (metadata_t *)mmap_from_system(BUFFER_SIZE);
+  heap->size = BUFFER_SIZE - METADATA_SIZE;
+  heap->next = NULL;
 }
 
 // Add a free slot to the beginning of the free list.
@@ -116,7 +105,7 @@ void add_to_free_list(metadata_t *metadata) {
   
   // 繋げられる空き領域を探して、あったら繋げる
   metadata_t *comparison_prev = NULL;
-  metadata_t *comparison = heap.free_head;
+  metadata_t *comparison = heap;
   while (comparison != NULL) {
     if ((metadata_t *)((char *)metadata + metadata->size + 1) == comparison) {
       if (comparison_prev != NULL) comparison_prev->next = metadata;
@@ -151,8 +140,8 @@ void add_to_free_list(metadata_t *metadata) {
     comparison = comparison->next;
   }
 
-  metadata->next = heap.free_head;
-  heap.free_head = metadata;
+  metadata->next = heap;
+  heap = metadata;
 }
 
 // Remove a free slot from the free list.
@@ -160,7 +149,7 @@ void remove_from_free_list(metadata_t *metadata, metadata_t *prev) {
   if (prev != NULL) {
     prev->next = metadata->next;
   } else {
-    heap.free_head = metadata->next;
+    heap = metadata->next;
   }
   metadata->next = NULL;
 }
@@ -173,7 +162,7 @@ void *my_malloc(size_t size) {
   // Implement here!
   metadata_t *metadata = NULL;
   metadata_t *prev = NULL;
-  metadata_t *now = heap.free_head;
+  metadata_t *now = heap;
   metadata_t *next = now->next;
 
   // First-fit: Find the first free slot the object fits.
