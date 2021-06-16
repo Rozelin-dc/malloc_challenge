@@ -124,7 +124,7 @@ void add_to_free_list(metadata_t *metadata) {
       metadata->next = comparison->next;
 
       if (metadata->size > BUFFER_SIZE) {
-        void *ptr = metadata + 2 + BUFFER_SIZE;
+        void *ptr = metadata + 1 + BUFFER_SIZE;
         munmap_to_system(ptr, BUFFER_SIZE);
         metadata->size -= BUFFER_SIZE;
       }
@@ -136,7 +136,7 @@ void add_to_free_list(metadata_t *metadata) {
       comparison->size = comparison->size + metadata->size + METADATA_SIZE;
 
       if (comparison->size > BUFFER_SIZE) {
-        void *ptr = comparison + 2 + BUFFER_SIZE;
+        void *ptr = comparison + 1 + BUFFER_SIZE;
         munmap_to_system(ptr, BUFFER_SIZE);
         comparison->size -= BUFFER_SIZE;
       }
