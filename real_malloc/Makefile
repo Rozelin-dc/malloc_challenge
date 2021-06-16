@@ -7,13 +7,13 @@ malloc_challenge.bin : ${SRCS} Makefile
 malloc_challenge_with_trace.bin : ${SRCS} Makefile
 	$(CC) -DENABLE_MALLOC_TRACE -o $@ $(SRCS) $(CFLAGS)
 
-run :
+run : malloc_challenge.bin
 	./malloc_challenge.bin
 
 run_trace : malloc_challenge_with_trace.bin
 	./malloc_challenge_with_trace.bin
 
-run_valgrind :
+run_valgrind : malloc_challenge_with_trace.bin
 	valgrind ./malloc_challenge.bin
 
 clean :
