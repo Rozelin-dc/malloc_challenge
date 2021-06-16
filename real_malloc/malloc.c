@@ -123,6 +123,7 @@ void add_to_free_list(metadata_t *metadata) {
       metadata->size = metadata->size + comparison->size + METADATA_SIZE;
       metadata->next = comparison->next;
 
+      // 繋げた空き領域が BUFFER_SIZE より大きくなったら解放
       if (metadata->size > BUFFER_SIZE) {
         void *ptr = metadata + 1 + BUFFER_SIZE;
         munmap_to_system(ptr, BUFFER_SIZE);
@@ -135,6 +136,7 @@ void add_to_free_list(metadata_t *metadata) {
     if ((metadata_t *)((char *)comparison + comparison->size + 1) == metadata) {
       comparison->size = comparison->size + metadata->size + METADATA_SIZE;
 
+      // 繋げた空き領域が BUFFER_SIZE より大きくなったら解放
       if (comparison->size > BUFFER_SIZE) {
         void *ptr = comparison + 1 + BUFFER_SIZE;
         munmap_to_system(ptr, BUFFER_SIZE);
