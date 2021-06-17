@@ -176,24 +176,24 @@ void *my_malloc(size_t size) {
   } */
 
   // Best-fit: Find the best free slot the object fits.
-  /* while (now->next != NULL) {
+  while (now->next != NULL) {
     next = now->next;
     if ((metadata == NULL || metadata->size > next->size) && next->size >= size) {
       metadata = next;
       prev = now;
     }
     now = next;
-  } */
+  }
 
   // Worst-fit: Find the worst free slot the object fits.
-  while (now->next != NULL) {
+  /* while (now->next != NULL) {
     next = now->next;
     if ((metadata == NULL || metadata->size < next->size) && next->size >= size) {
       metadata = next;
       prev = now;
     }
     now = next;
-  }
+  } */
 
 
   if (metadata == NULL) {
