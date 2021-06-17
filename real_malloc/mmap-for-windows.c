@@ -1,7 +1,7 @@
 #include "mmap-for-windows.h"
 
 void *mmap_for_windows(HANDLE* map_handle, size_t size) {
-  char fname[] = "LAPTOP-CCU0KHN9"; // input your PC name here
+  char fname[] = ""; // input your PC name here
 
   HANDLE handle = CreateFileW((LPCWSTR)fname, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
