@@ -1,21 +1,14 @@
 #include "mmap-for-windows.h"
 
-void *mmap_for_windows(char* fpath, HANDLE* map_handle, size_t size) {
-  wchar_t fname[80];
-  char* p = fpath;
-  int i = 0;
-  while(*p != '\0')  {
-    mbtowc(&fname[i++], p, MB_CUR_MAX);
-    p++;
-  }
-  fname[i] = '\0';
+void *mmap_for_windows(HANDLE* map_handle, size_t size) {
+  char fname[] = "LAPTOP-CCU0KHN9"; // input your PC name here
 
   HANDLE handle = CreateFileW((LPCWSTR)fname, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
-  /* if(handle == INVALID_HANDLE_VALUE) {
+  if(handle == INVALID_HANDLE_VALUE) {
     fprintf(stderr, "Failed to open file.\n");
     exit(1);
-  } */
+  }
 
   size = GetFileSize(handle, 0);
   *map_handle = CreateFileMapping(handle, 0, PAGE_READWRITE, 0, 0, NULL);

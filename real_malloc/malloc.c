@@ -62,9 +62,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 
-void *mmap_from_system(size_t size);
-void munmap_to_system(void *ptr, size_t size);
+void *mmap_from_system(size_t size, HANDLE* map_handle);
+void munmap_to_system(void *ptr, size_t size, HANDLE* map_handle);
 
 // my_initialize() is called only once at the beginning of each challenge.
 void my_initialize() {
@@ -77,14 +78,15 @@ void my_initialize() {
 // munmap_to_system.
 void *my_malloc(size_t size) {
   // Implement here!
-  return mmap_from_system(4096);
+  HANDLE map_handle;
+  return mmap_from_system(4096, &map_handle);
 }
 
 // my_free() is called every time an object is freed.  You are not allowed to
 // use any library functions other than mmap_from_system / munmap_to_system.
 void my_free(void *ptr) {
   // Implement here!
-  munmap_to_system(ptr, 4096);
+  // munmap_to_system(ptr, 4096);
 }
 
 void my_finalize() {
