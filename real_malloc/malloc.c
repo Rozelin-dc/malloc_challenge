@@ -135,11 +135,11 @@ void add_to_free_list(metadata_t *metadata) {
       return;
     }
 
-    // 繋げられる空き領域が無かったら
     comparison_prev = comparison;
     comparison = comparison->next;
   }
 
+  // 繋げられる空き領域が無かったら
   metadata->next = heap;
   heap = metadata;
 }
@@ -221,7 +221,7 @@ void *my_malloc(size_t size) {
   //     metadata   ptr
   void *ptr = metadata + 1;
   size_t remaining_size = metadata->size - size;
-  metadata->size = size;
+
   // Remove the free slot from the free list.
   remove_from_free_list(metadata, prev);
 
@@ -238,9 +238,11 @@ void *my_malloc(size_t size) {
     new_metadata->next = NULL;
     // Add the remaining free slot to the free list.
     add_to_free_list(new_metadata);
+
+    metadata->size = size;
   }
+
   return ptr;
-  // return mmap_from_system(4096);
 }
 
 // my_free() is called every time an object is freed.  You are not allowed to
@@ -255,7 +257,6 @@ void my_free(void *ptr) {
   metadata_t *metadata = (metadata_t *)ptr - 1;
   // Add the free slot to the free list.
   add_to_free_list(metadata);
-  // munmap_to_system(ptr, 4096);
 }
 
 void my_finalize() {
