@@ -84,50 +84,53 @@ void munmap_to_system(void *ptr, size_t size);
 typedef struct metadata_t {
   size_t size;
   struct metadata_t *next;
+  struct metadata_t *prev;
 } metadata_t;
 
 metadata_t *heap;
 
 #define BUFFER_SIZE 4096
-#define METADATA_SIZE sizeof(metadata_t)
 
 // my_initialize() is called only once at the beginning of each challenge.
 void my_initialize() {
   // Implement here!
   heap = (metadata_t *)mmap_from_system(BUFFER_SIZE);
-  heap->size = BUFFER_SIZE - METADATA_SIZE;
+  heap->size = BUFFER_SIZE - sizeof(metadata_t);
   heap->next = NULL;
+  heap->prev = NULL;
 }
 
 // Add a free slot to the beginning of the free list.
 void add_to_free_list(metadata_t *metadata) {
   assert(!metadata->next);
+  assert(!metadata->prev);
   
   // 繋げられる空き領域を探して、あったら繋げる
   metadata_t *comparison_prev = NULL;
   metadata_t *comparison = heap;
   while (comparison != NULL) {
-    if ((metadata_t *)((char *)metadata + metadata->size + 1) == comparison) {
+    if ((metadata_t *)((char *)metadata + metadata->size + sizeof(metadata_t)) == comparison) {
       if (comparison_prev != NULL) comparison_prev->next = metadata;
-      metadata->size = metadata->size + comparison->size + METADATA_SIZE;
+      metadata->size = metadata->size + comparison->size + sizeof(metadata_t);
       metadata->next = comparison->next;
+      metadata->prev = comparison_prev;
 
       // 繋げた空き領域が BUFFER_SIZE より大きくなったら解放
       if (metadata->size > BUFFER_SIZE) {
-        void *ptr = metadata + 1 + BUFFER_SIZE;
+        void *ptr = (void *)((char *)metadata + sizeof(metadata_t) + BUFFER_SIZE);
         munmap_to_system(ptr, BUFFER_SIZE);
         metadata->size -= BUFFER_SIZE;
       }
-      
+
       return;
     }
 
-    if ((metadata_t *)((char *)comparison + comparison->size + 1) == metadata) {
-      comparison->size = comparison->size + metadata->size + METADATA_SIZE;
+    if ((metadata_t *)((char *)comparison + comparison->size + sizeof(metadata_t)) == metadata) {
+      comparison->size = comparison->size + metadata->size + sizeof(metadata_t);
 
       // 繋げた空き領域が BUFFER_SIZE より大きくなったら解放
       if (comparison->size > BUFFER_SIZE) {
-        void *ptr = comparison + 1 + BUFFER_SIZE;
+        void *ptr = (void *)((char *)comparison + sizeof(metadata_t) + BUFFER_SIZE);
         munmap_to_system(ptr, BUFFER_SIZE);
         comparison->size -= BUFFER_SIZE;
       }
@@ -140,18 +143,32 @@ void add_to_free_list(metadata_t *metadata) {
   }
 
   // 繋げられる空き領域が無かったら
-  metadata->next = heap;
-  heap = metadata;
+  if (heap != NULL) {
+    metadata->next = heap;
+    heap = metadata;
+    heap->next->prev = heap;
+  } else {
+    heap = metadata;
+  }
 }
 
 // Remove a free slot from the free list.
-void remove_from_free_list(metadata_t *metadata, metadata_t *prev) {
-  if (prev != NULL) {
-    prev->next = metadata->next;
+void remove_from_free_list(metadata_t *metadata) {
+  metadata_t *prev = metadata->prev;
+  metadata_t *next = metadata->next;
+
+  if (prev != NULL && next != NULL) {
+    prev->next = next;
+  } else if (prev == NULL && next != NULL) {
+    heap = next;
+  } else if (prev != NULL && next == NULL) {
+    prev->next = NULL;
   } else {
-    heap = metadata->next;
+    heap = NULL;
   }
+
   metadata->next = NULL;
+  metadata->prev = NULL;
 }
 
 // my_malloc() is called every time an object is allocated. |size| is guaranteed
@@ -161,9 +178,7 @@ void remove_from_free_list(metadata_t *metadata, metadata_t *prev) {
 void *my_malloc(size_t size) {
   // Implement here!
   metadata_t *metadata = NULL;
-  metadata_t *prev = NULL;
   metadata_t *now = heap;
-  metadata_t *next = now->next;
 
   // First-fit: Find the first free slot the object fits.
   /* while (now != NULL) {
@@ -171,28 +186,23 @@ void *my_malloc(size_t size) {
       metadata = now;
       break;
     }
-    prev = now;
     now = now->next;
   } */
 
   // Best-fit: Find the best free slot the object fits.
-  while (now->next != NULL) {
-    next = now->next;
-    if ((metadata == NULL || metadata->size > next->size) && next->size >= size) {
-      metadata = next;
-      prev = now;
+  while (now != NULL) {
+    if ((metadata == NULL || metadata->size > now->size) && now->size >= size) {
+      metadata = now;
     }
-    now = next;
+    now = now->next;
   }
 
   // Worst-fit: Find the worst free slot the object fits.
-  /* while (now->next != NULL) {
-    next = now->next;
-    if ((metadata == NULL || metadata->size < next->size) && next->size >= size) {
-      metadata = next;
-      prev = now;
+  /* while (now != NULL) {
+    if ((metadata == NULL || metadata->size < now->size) && now->size >= size) {
+      metadata = now;
     }
-    now = next;
+    now = now->next;
   } */
 
 
@@ -206,8 +216,9 @@ void *my_malloc(size_t size) {
     //     <---------------------->
     //            buffer_size
     metadata = (metadata_t *)mmap_from_system(BUFFER_SIZE);
-    metadata->size = BUFFER_SIZE - METADATA_SIZE;
+    metadata->size = BUFFER_SIZE - sizeof(metadata_t);
     metadata->next = NULL;
+    metadata->prev = NULL;
     // Add the memory region to the free list.
     add_to_free_list(metadata);
     // Now, try my_malloc() again. This should succeed.
@@ -223,9 +234,9 @@ void *my_malloc(size_t size) {
   size_t remaining_size = metadata->size - size;
 
   // Remove the free slot from the free list.
-  remove_from_free_list(metadata, prev);
+  remove_from_free_list(metadata);
 
-  if (remaining_size > METADATA_SIZE) {
+  if (remaining_size > sizeof(metadata_t)) {
     // Create a new metadata for the remaining free slot.
     //
     // ... | metadata | object | metadata | free slot | ...
@@ -234,8 +245,9 @@ void *my_malloc(size_t size) {
     //                 <------><---------------------->
     //                   size       remaining size
     metadata_t *new_metadata = (metadata_t *)((char *)ptr + size);
-    new_metadata->size = remaining_size - METADATA_SIZE;
+    new_metadata->size = remaining_size - sizeof(metadata_t);
     new_metadata->next = NULL;
+    new_metadata->prev = NULL;
     // Add the remaining free slot to the free list.
     add_to_free_list(new_metadata);
 
