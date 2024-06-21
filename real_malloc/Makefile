@@ -14,7 +14,7 @@ run_trace : malloc_challenge_with_trace.bin
 	./malloc_challenge_with_trace.bin
 
 run_valgrind : malloc_challenge_with_trace.bin
-	valgrind ./malloc_challenge_with_trace.bin
+	valgrind ./malloc_challenge.bin
 
 clean :
 	-rm *.txt
@@ -24,4 +24,7 @@ commit :
 	clang-format -i *.c
 	git add .
 	git commit
+
+build :
+	gcc -g -Wall -O3 -o malloc_challenge.bin main.c malloc.c simple_malloc.c -lm
 
