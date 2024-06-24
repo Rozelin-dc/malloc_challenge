@@ -4,11 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <sys/time.h>
+#include <windows.h>
 
-void *mmap_from_system(size_t size);
-void munmap_to_system(void *ptr, size_t size);
+void *mmap_from_system(size_t size, HANDLE* map_handle);
+void munmap_to_system(void *ptr, size_t size, HANDLE* map_handle);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -98,8 +98,9 @@ void *simple_malloc(size_t size) {
     //     <---------------------->
     //            buffer_size
     size_t buffer_size = 4096;
+    HANDLE map_handle;
     simple_metadata_t *metadata =
-        (simple_metadata_t *)mmap_from_system(buffer_size);
+        (simple_metadata_t *)mmap_from_system(buffer_size, &map_handle);
     metadata->size = buffer_size - sizeof(simple_metadata_t);
     metadata->next = NULL;
     // Add the memory region to the free list.

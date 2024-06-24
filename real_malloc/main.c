@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <sys/time.h>
+#include "mmap-for-windows.h"
 
 //
 // [Simple malloc]
@@ -203,7 +203,7 @@ void run_challenge(const char *trace_file_name, size_t min_size,
         allocated += size;
         void *ptr = malloc_func(size);
         if (trace_fp) {
-          fprintf(trace_fp, "a %llu %ld\n", (unsigned long long)ptr, size);
+          fprintf(trace_fp, "a %I64d %I64d\n", (unsigned long long)ptr, size);
         }
         memset(ptr, tag, size);
         object_t object = {ptr, size, tag};
@@ -235,14 +235,14 @@ void run_challenge(const char *trace_file_name, size_t min_size,
         }
         free_func(object.ptr);
         if (trace_fp) {
-          fprintf(trace_fp, "f %llu %ld\n", (unsigned long long)object.ptr,
+          fprintf(trace_fp, "f %I64d %I64d\n", (unsigned long long)object.ptr,
                   object.size);
         }
       }
 
 #if 0
       // Debug print
-      printf("epoch = %d, allocated = %ld bytes, freed = %ld bytes\n",
+      printf("epoch = %d, allocated = %I64d bytes, freed = %I64d bytes\n",
              cycle * epochs_per_cycle + epoch, allocated, freed);
       printf("allocated = %.2f MB, freed = %.2f MB, mmap = %.2f MB, munmap = %.2f MB, utilization = %d%%\n",
              stats.allocated_size / 1024.0 / 1024.0,
@@ -336,29 +336,27 @@ void run_challenges() {
 
 // Allocate a memory region from the system. |size| needs to be a multiple of
 // 4096 bytes.
-void *mmap_from_system(size_t size) {
+void *mmap_from_system(size_t size, HANDLE* map_handle) {
   assert(size % 4096 == 0);
   stats.mmap_size += size;
-  void *ptr = mmap(NULL, size, PROT_READ | PROT_WRITE,
-                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  void *ptr = mmap_for_windows(map_handle, size);
   assert(ptr);
   if (trace_fp) {
-    fprintf(trace_fp, "m %llu %ld\n", (unsigned long long)ptr, size);
+    fprintf(trace_fp, "m %I64d %I64d\n", (unsigned long long)ptr, size);
   }
   return ptr;
 }
 
 // Free a memory region [ptr, ptr + size) to the system. |ptr| and |size| needs
 // to be a multiple of 4096 bytes.
-void munmap_to_system(void *ptr, size_t size) {
+void munmap_to_system(void *ptr, size_t size, HANDLE* map_handle) {
   assert(size % 4096 == 0);
   assert((uintptr_t)(ptr) % 4096 == 0);
   stats.munmap_size += size;
-  int ret = munmap(ptr, size);
+  munmap_for_windows(ptr, map_handle);
   if (trace_fp) {
-    fprintf(trace_fp, "u %llu %ld\n", (unsigned long long)ptr, size);
+    fprintf(trace_fp, "u %I64d %I64d\n", (unsigned long long)ptr, size);
   }
-  assert(ret != -1);
 }
 
 int main(int argc, char **argv) {

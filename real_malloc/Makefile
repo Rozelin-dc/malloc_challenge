@@ -25,3 +25,6 @@ commit :
 	git add .
 	git commit
 
+build_windows: 
+	gcc -Wall -O3 -o malloc_challenge.bin main.c malloc.c simple_malloc.c mmap-for-windows.c -lm
+

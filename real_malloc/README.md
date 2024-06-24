@@ -8,7 +8,7 @@ Your task is implement a better malloc logic in [malloc.c](malloc.c) to improve 
 
 ```
 # build
-make
+make build_windows
 # run a benchmark
 make run
 ```
@@ -16,7 +16,7 @@ make run
 If the commands above don't work, you can build and run the challenge directly by running:
 
 ```
-gcc -Wall -O3 -lm -o malloc_challenge.bin main.c malloc.c simple_malloc.c
+gcc -Wall -O3 -o malloc_challenge.bin main.c malloc.c simple_malloc.c mmap-for-windows.c -lm
 ./malloc_challenge.bin
 ```
 
